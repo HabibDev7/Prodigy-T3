@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c3e50;
+        }
+
+        .container {
+            text-align: center;
+            color: #ecf0f1;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin: 0 auto;
+        }
+
+        .square {
+            width: 100px;
+            height: 100px;
+            background-color: #34495e;
+            border: 1px solid #1abc9c;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+            .square:hover {
+                background-color: #1abc9c;
+                transform: scale(1.1);
+            }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #1abc9c;
+            color: #ecf0f1;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+            button:hover {
+                background-color: #16a085;
+                transform: scale(1.05);
+            }
+
+            button:active {
+                background-color: #1e8449;
+            }
+
+        #welcome-page, #multiplayer-settings, #ai-settings, #game-screen {
+            display: none;
+        }
+
+            #welcome-page.active, #multiplayer-settings.active, #ai-settings.active, #game-screen.active {
+                display: block;
+            }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+            .form-container input, .form-container select {
+                margin: 10px;
+                padding: 10px;
+                font-size: 1em;
+                border: 1px solid #1abc9c;
+                border-radius: 5px;
+                background-color: #34495e;
+                color: #ecf0f1;
+            }
+
+                .form-container input::placeholder, .form-container select {
+                    color: #95a5a6;
+                }
+
+        .form-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+        }
+
+            .form-row label {
+                margin: 0 10px;
+            }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+        }
+
+        #game-title {
+            margin: 20px 0;
+        }
+
+    </style>
+
+</head>
+<body>
+    
+    <div id="welcome-page" class="container active">
+        <h1>Welcome to Tic-Tac-Toe</h1>
+        <div class="form-container">
+            <div class="form-row">
+                <label for="game-mode">Choose the game mode:</label>
+                <select id="game-mode">
+                    <option value="multiplayer">Multiplayer</option>
+                    <option value="ai">SinglePlayer</option>
+                </select>
+            </div>
+            <div class="button-container">
+                <button id="enter-button">Enter</button>
+            </div>
+        </div>
+    </div>
+
+   
+    <div id="multiplayer-settings" class="container">
+        <h1>Multiplayer Mode</h1>
+        <div class="form-container">
+            <div class="form-row">
+                <label for="player1-name">Player 1's Name:</label>
+                <input type="text" id="player1-name" placeholder="Enter Player 1's Name" required>
+                <select id="player1-marker">
+                    <option value="X">X</option>
+                    <option value="O">O</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="player2-name">Player 2's Name:</label>
+                <input type="text" id="player2-name" placeholder="Enter Player 2's Name" required>
+                <select id="player2-marker">
+                    <option value="O">O</option>
+                    <option value="X">X</option>
+                </select>
+            </div>
+            <div id="error-message-multiplayer" class="error"></div>
+            <div class="button-container">
+                <button id="start-multiplayer-game">Start Game</button>
+                <button id="back-to-menu-button1">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="ai-settings" class="container">
+        <h1>AI Mode</h1>
+        <div class="form-container">
+            <div class="form-row">
+                <label for="player-name-ai">Your Name:</label>
+                <input type="text" id="player-name-ai" placeholder="Enter Your Name" required>
+                <select id="player-marker-ai">
+                    <option value="X">X</option>
+                    <option value="O">O</option>
+                </select>
+            </div>
+            <div id="error-message-ai" class="error"></div>
+            <div class="button-container">
+                <button id="start-ai-game">Start Game</button>
+                <button id="back-to-menu-button2">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="game-screen" class="container">
+        <h1 id="game-title">Tic-Tac-Toe</h1>
+        <div id="game-board"></div>
+        <div class="button-container">
+            <button id="restart-button">Restart Game</button>
+            <button id="back-to-menu-button3">Back to Menu</button>
+        </div>
+    </div>
+
+
+    <script>
+        const welcomePage = document.getElementById('welcome-page');
+        const multiplayerSettings = document.getElementById('multiplayer-settings');
+        const aiSettings = document.getElementById('ai-settings');
+        const gameScreen = document.getElementById('game-screen');
+        const enterButton = document.getElementById('enter-button');
+        const startMultiplayerButton = document.getElementById('start-multiplayer-game');
+        const startAIButton = document.getElementById('start-ai-game');
+        const gameModeSelect = document.getElementById('game-mode');
+        const player1NameInput = document.getElementById('player1-name');
+        const player2NameInput = document.getElementById('player2-name');
+        const player1MarkerSelect = document.getElementById('player1-marker');
+        const player2MarkerSelect = document.getElementById('player2-marker');
+        const playerNameAIInput = document.getElementById('player-name-ai');
+        const playerMarkerAISelect = document.getElementById('player-marker-ai');
+        const board = document.getElementById('game-board');
+        const restartButton = document.getElementById('restart-button');
+        const backToMenuButton1 = document.getElementById('back-to-menu-button1');
+        const backToMenuButton2 = document.getElementById('back-to-menu-button2');
+        const backToMenuButton3 = document.getElementById('back-to-menu-button3');
+        const gameTitle = document.getElementById('game-title');
+        const errorMessageMultiplayer = document.getElementById('error-message-multiplayer');
+        const errorMessageAI = document.getElementById('error-message-ai');
+
+        let currentPlayer, player1, player2;
+        let boardState = Array(9).fill(null);
+        let isAI = false;
+
+        function createBoard() {
+            board.innerHTML = '';
+            boardState.forEach((value, index) => {
+                const square = document.createElement('div');
+                square.className = 'square';
+                square.dataset.index = index;
+                square.textContent = value;
+                square.addEventListener('click', handleSquareClick);
+                board.appendChild(square);
+            });
+        }
+
+        function handleSquareClick(event) {
+            const index = event.target.dataset.index;
+
+            if (boardState[index] || checkWinner()) return;
+
+            boardState[index] = currentPlayer.marker;
+            event.target.textContent = currentPlayer.marker;
+
+            if (checkWinner()) {
+                gameTitle.textContent = `${currentPlayer.name} wins!`;
+                return;
+            }
+
+            if (boardState.every(cell => cell)) {
+                gameTitle.textContent = "It's a draw!";
+                return;
+            }
+
+            if (isAI) {
+                gameTitle.textContent = "";
+                setTimeout(aiMove, 500);
+            } else {
+                currentPlayer = currentPlayer === player1 ? player2 : player1;
+                gameTitle.textContent = `${currentPlayer.name}'s turn`;
+            }
+        }
+
+        function aiMove() {
+            const emptyIndexes = boardState
+                .map((value, index) => (value === null ? index : -1))
+                .filter(index => index !== -1);
+
+            const randomIndex = emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
+            boardState[randomIndex] = player2.marker;
+
+            const aiSquare = document.querySelector(`.square[data-index="${randomIndex}"]`);
+            aiSquare.textContent = player2.marker;
+
+            if (checkWinner()) {
+                gameTitle.textContent = "You lost!";
+                return;
+            }
+
+            if (boardState.every(cell => cell)) {
+                gameTitle.textContent = "It's a draw!";
+                return;
+            }
+
+            gameTitle.textContent = `${player1.name}'s turn`;
+        }
+
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
+
+            return winningCombinations.some(combination => {
+                const [a, b, c] = combination;
+                return (
+                    boardState[a] &&
+                    boardState[a] === boardState[b] &&
+                    boardState[a] === boardState[c]
+                );
+            });
+        }
+
+        function startMultiplayerGame() {
+            const player1Name = player1NameInput.value.trim();
+            const player2Name = player2NameInput.value.trim();
+
+            if (!player1Name || !player2Name) {
+                errorMessageMultiplayer.textContent = "Please enter names for both players.";
+                return;
+            }
+
+            if (player1MarkerSelect.value === player2MarkerSelect.value) {
+                errorMessageMultiplayer.textContent = "Players must have different markers.";
+                return;
+            }
+
+            player1 = { name: player1Name, marker: player1MarkerSelect.value };
+            player2 = { name: player2Name, marker: player2MarkerSelect.value };
+            currentPlayer = player1;
+            isAI = false;
+
+            multiplayerSettings.classList.remove('active');
+            gameScreen.classList.add('active');
+
+            gameTitle.textContent = `${currentPlayer.name}'s turn`;
+            createBoard();
+        }
+
+        function startAIGame() {
+            const playerName = playerNameAIInput.value.trim();
+
+            if (!playerName) {
+                errorMessageAI.textContent = "Please enter your name.";
+                return;
+            }
+
+            player1 = { name: playerName, marker: playerMarkerAISelect.value };
+            player2 = { name: "AI", marker: player1.marker === 'X' ? 'O' : 'X' };
+            currentPlayer = player1;
+            isAI = true;
+
+            aiSettings.classList.remove('active');
+            gameScreen.classList.add('active');
+
+            gameTitle.textContent = `${currentPlayer.name}'s turn`;
+            createBoard();
+        }
+
+        function restartGame() {
+            boardState.fill(null);
+            currentPlayer = player1;
+            gameTitle.textContent = `${currentPlayer.name}'s turn`;
+            createBoard();
+        }
+
+        function backToMenu() {
+            welcomePage.classList.add('active');
+            multiplayerSettings.classList.remove('active');
+            aiSettings.classList.remove('active');
+            gameScreen.classList.remove('active');
+
+            player1NameInput.value = '';
+            player2NameInput.value = '';
+            player1MarkerSelect.value = 'X';
+            player2MarkerSelect.value = 'O';
+            playerNameAIInput.value = '';
+            playerMarkerAISelect.value = 'X';
+
+            errorMessageMultiplayer.textContent = '';
+            errorMessageAI.textContent = '';
+
+            boardState.fill(null);
+            currentPlayer = null;
+            isAI = false;
+            gameTitle.textContent = '';
+
+            createBoard();
+        }
+
+        enterButton.addEventListener('click', () => {
+            const gameMode = gameModeSelect.value;
+            welcomePage.classList.remove('active');
+            if (gameMode === 'multiplayer') {
+                multiplayerSettings.classList.add('active');
+            } else if (gameMode === 'ai') {
+                aiSettings.classList.add('active');
+            }
+        });
+
+        startMultiplayerButton.addEventListener('click', startMultiplayerGame);
+        startAIButton.addEventListener('click', startAIGame);
+        restartButton.addEventListener('click', restartGame);
+        backToMenuButton1.addEventListener('click', backToMenu);
+        backToMenuButton2.addEventListener('click', backToMenu);
+        backToMenuButton3.addEventListener('click', backToMenu);
+    </script>
+</body>
+</html>
